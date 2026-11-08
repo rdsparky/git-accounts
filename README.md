@@ -1,10 +1,14 @@
 # Git Accounts
 
+[![tests](https://github.com/rdsparky/git-accounts/actions/workflows/tests.yml/badge.svg)](https://github.com/rdsparky/git-accounts/actions/workflows/tests.yml)
+[![latest release](https://img.shields.io/github/v/release/rdsparky/git-accounts)](https://github.com/rdsparky/git-accounts/releases/latest)
+
 A small Windows app (GUI and CLI) that keeps your **work** and **personal** Git/GitHub accounts apart.
 It always shows which account a repository will commit and push as, and lets you switch with one click.
-It uses only the Python standard library (3.10+), so there is nothing to install.
 
-![icon](assets/gitaccounts.png)
+![Git Accounts showing a repository pinned to a personal account](assets/screenshot.png)
+
+*Demo data. The badge colour and text show which account this repo uses.*
 
 ## Why
 With two GitHub accounts on one PC it is easy to:
@@ -14,10 +18,20 @@ With two GitHub accounts on one PC it is easy to:
 Git Accounts makes the active account visible and lets you fix it per repository or per folder.
 
 ## Install
-1. Install [Python 3.10+](https://www.python.org/downloads/windows/) with tcl/tk (the default), and [Git for Windows](https://git-scm.com/).
+You need [Git for Windows](https://git-scm.com/) in both cases.
+
+### Option A: download the .exe (no Python needed)
+Get **`GitAccounts.exe`** from the [latest release](https://github.com/rdsparky/git-accounts/releases/latest) and double-click it.
+
+GitHub Actions builds the exe from the tagged source. It is **not code-signed**, so Windows SmartScreen may say
+*"Windows protected your PC"*: click *More info* → *Run anyway*. Each release includes a `GitAccounts.exe.sha256`
+checksum you can compare with `Get-FileHash GitAccounts.exe`.
+
+### Option B: run from source (Python 3.10+, standard library only)
+1. Install [Python 3.10+](https://www.python.org/downloads/windows/) with tcl/tk (the default).
 2. Download or clone this repository.
 3. Double-click `install-shortcuts.cmd`. This adds **Git Accounts** to the Start menu and the Desktop.
-   Or double-click `GitAccounts.pyw` directly.
+   Or double-click `GitAccounts.pyw` directly. The CLI (`gitacct.cmd`) is only available this way.
 
 ## Features
 - **Badge** showing the account the selected repo uses, in that account's colour, and where it comes from:
@@ -64,7 +78,12 @@ py -3 tests\test_core.py
 The tests run against a temporary home folder and global git config; your real `~/.gitconfig` is never touched.
 
 ## Status
-Early (0.1). It is tested on Windows 11 with Python 3.11 and 3.14 and Git 2.43. macOS and Linux are not supported yet.
+Early (0.1).
+- Tested on Windows 11 with Python 3.11 and 3.14 and Git 2.43. CI runs the tests on Python 3.10, 3.12 and 3.13.
+- Pushing over **SSH** is tested end to end. Pushing over **HTTPS** with several accounts relies on Git Credential Manager picking the account from `credential.username`, and that has not been tested yet.
+- macOS and Linux are not supported yet.
+
+Issues and pull requests are welcome.
 
 ## License
 MIT

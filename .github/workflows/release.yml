@@ -1,0 +1,42 @@
+name: release
+
+# Push a tag like v0.1.0 to build GitAccounts.exe and publish it as a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tests
+        run: python tests/test_core.py
+      - name: Build GitAccounts.exe
+        run: |
+          python -m pip install --disable-pip-version-check pyinstaller==6.22.3
+          pyinstaller --noconfirm --clean --onefile --windowed --name GitAccounts `
+            --icon assets/gitaccounts.ico --add-data "assets/gitaccounts.ico;assets" `
+            --paths . GitAccounts.pyw
+      - name: Checksum
+        run: |
+          $h = (Get-FileHash dist/GitAccounts.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  GitAccounts.exe" | Out-File -Encoding ascii dist/GitAccounts.exe.sha256
+          Get-Content dist/GitAccounts.exe.sha256
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $notes = @"
+          **Download ``GitAccounts.exe``** and double-click it. Python is not needed. [Git for Windows](https://git-scm.com/) must be installed.
+
+          The exe is built by this workflow from the tagged source and is **not code-signed**. Windows SmartScreen may show *Windows protected your PC*. Click *More info* → *Run anyway*. You can check the file against ``GitAccounts.exe.sha256``, or run from source instead (see README).
+          "@
+          gh release create "${{ github.ref_name }}" dist/GitAccounts.exe dist/GitAccounts.exe.sha256 `
+            --title "Git Accounts ${{ github.ref_name }}" --notes $notes
