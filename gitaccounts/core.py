@@ -226,13 +226,18 @@ def status(path: str, store: Store) -> dict:
 
 
 def matching_rule(path: str, store: Store) -> Rule | None:
-    p = fwd(Path(path).resolve()).lower().rstrip("/") + "/"
-    best = None
+    # resolve() on both sides: Windows 8.3 short names (C:\Users\RUNNER~1) and long names must compare equal
+    p = _norm_dir(path)
+    best, best_len = None, -1
     for r in store.rules:
-        f = fwd(r.folder).lower().rstrip("/") + "/"
-        if p.startswith(f) and (best is None or len(f) > len(fwd(best.folder))):
-            best = r
+        f = _norm_dir(r.folder)
+        if p.startswith(f) and len(f) > best_len:
+            best, best_len = r, len(f)
     return best
+
+
+def _norm_dir(path: str) -> str:
+    return fwd(Path(path).resolve()).lower().rstrip("/") + "/"
 
 
 def unpushed_commits(root: str) -> list[dict]:

@@ -118,6 +118,22 @@ class CoreTests(unittest.TestCase):
         self.assertIn("elsewhere", sh("config", "--global", "--get-regexp", "includeif", cwd=TMP))
         sh("config", "--global", "--unset", "includeIf.gitdir:C:/x/.path", cwd=TMP)
 
+    def test_rule_matches_short_and_long_windows_paths(self):
+        import ctypes
+        long_dir = TMP / "Long Folder Name For Rules"
+        (long_dir / "repo").mkdir(parents=True)
+        buf = ctypes.create_unicode_buffer(1024)
+        ctypes.windll.kernel32.GetShortPathNameW(str(long_dir), buf, 1024)
+        short = buf.value
+        if not short or short.lower() == str(long_dir).lower():
+            self.skipTest("8.3 short names are disabled on this volume")
+        s = core.Store([core.Profile(**vars(PERS))])
+        s.rules = [core.Rule(short, "personal")]          # rule saved with the short form
+        self.assertEqual(core.matching_rule(str(long_dir / "repo"), s).profile_id, "personal")
+        s.rules = [core.Rule(core.fwd(long_dir), "personal")]  # rule long, path short
+        self.assertEqual(core.matching_rule(short + "\\repo", s).profile_id, "personal")
+        self.assertIsNone(core.matching_rule(str(TMP), s))
+
     def test_reauthor_only_unpushed_and_keeps_dates(self):
         s = self.store()
         d = make_repo("r_reauthor", commits=3)
